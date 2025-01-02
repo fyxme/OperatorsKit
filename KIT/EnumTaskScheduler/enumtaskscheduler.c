@@ -193,6 +193,13 @@ BOOL EnumScheduledTasks(wchar_t * host) {
 												internal_printf("- Executable path: %ls\n", execPath);
 												OLEAUT32$SysFreeString(execPath);
 											}
+
+                                                                                        BSTR arguments;
+                                                                                        hr = pExecAction->lpVtbl->get_Arguments(pExecAction, &arguments);
+                                                                                        if (SUCCEEDED(hr)) {
+                                                                                                internal_printf("- Command Arguments: %ls\n", arguments);
+                                                                                                OLEAUT32$SysFreeString(arguments);
+                                                                                        }
 										}
 									}
 
