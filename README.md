@@ -1,6 +1,8 @@
 # OperatorsKit
 This repository contains a collection of Beacon Object Files (BOFs) that integrate with Cobalt Strike.  
 
+> Note: This fork is an updated version which includes improvements to certain bofs such as finding the network share path to NETWORK mapped drives.
+
 ## Kit content
 The following tools are currently in the OperatorsKit: 
 
