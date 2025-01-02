@@ -7,9 +7,9 @@
 
 
 typedef struct {
-    const char *filename;
-    const char *description;
-    const char *category;
+	const char *filename;
+	const char *description;
+	const char *category;
 } SoftwareData;
 
 
@@ -25,62 +25,62 @@ void internal_printf(const char* format, ...);
 void printoutput(BOOL done);
 
 int bofstart() {   
-    output = (char*)MSVCRT$calloc(bufsize, 1);
-    currentoutsize = 0;
-    return 1;
+	output = (char*)MSVCRT$calloc(bufsize, 1);
+	currentoutsize = 0;
+	return 1;
 }
 
 void internal_printf(const char* format, ...){
-    int buffersize = 0;
-    int transfersize = 0;
-    char * curloc = NULL;
-    char* intBuffer = NULL;
-    va_list args;
-    va_start(args, format);
-    buffersize = MSVCRT$vsnprintf(NULL, 0, format, args); 
-    va_end(args);
-    
-    if (buffersize == -1) return;
-    
-    char* transferBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, bufsize);
+	int buffersize = 0;
+	int transfersize = 0;
+	char * curloc = NULL;
+	char* intBuffer = NULL;
+	va_list args;
+	va_start(args, format);
+	buffersize = MSVCRT$vsnprintf(NULL, 0, format, args); 
+	va_end(args);
+
+	if (buffersize == -1) return;
+
+	char* transferBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, bufsize);
 	intBuffer = (char*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, buffersize);
-    va_start(args, format);
-    MSVCRT$vsnprintf(intBuffer, buffersize, format, args); 
-    va_end(args);
-    if(buffersize + currentoutsize < bufsize) 
-    {
-        MSVCRT$memcpy(output+currentoutsize, intBuffer, buffersize);
-        currentoutsize += buffersize;
-    } else {
-        curloc = intBuffer;
-        while(buffersize > 0)
-        {
-            transfersize = bufsize - currentoutsize;
-            if(buffersize < transfersize) 
-            {
-                transfersize = buffersize;
-            }
-            MSVCRT$memcpy(output+currentoutsize, curloc, transfersize);
-            currentoutsize += transfersize;
-            if(currentoutsize == bufsize)
-            {
-                printoutput(FALSE); 
-            }
-            MSVCRT$memset(transferBuffer, 0, transfersize); 
-            curloc += transfersize; 
-            buffersize -= transfersize;
-        }
-    }
+	va_start(args, format);
+	MSVCRT$vsnprintf(intBuffer, buffersize, format, args); 
+	va_end(args);
+	if(buffersize + currentoutsize < bufsize) 
+	{
+		MSVCRT$memcpy(output+currentoutsize, intBuffer, buffersize);
+		currentoutsize += buffersize;
+	} else {
+		curloc = intBuffer;
+		while(buffersize > 0)
+		{
+			transfersize = bufsize - currentoutsize;
+			if(buffersize < transfersize) 
+			{
+				transfersize = buffersize;
+			}
+			MSVCRT$memcpy(output+currentoutsize, curloc, transfersize);
+			currentoutsize += transfersize;
+			if(currentoutsize == bufsize)
+			{
+				printoutput(FALSE); 
+			}
+			MSVCRT$memset(transferBuffer, 0, transfersize); 
+			curloc += transfersize; 
+			buffersize -= transfersize;
+		}
+	}
 	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, intBuffer);
 	KERNEL32$HeapFree(KERNEL32$GetProcessHeap(), 0, transferBuffer);
 }
 
 void printoutput(BOOL done) {
-    char * msg = NULL;
-    BeaconOutput(CALLBACK_OUTPUT, output, currentoutsize);
-    currentoutsize = 0;
-    MSVCRT$memset(output, 0, bufsize);
-    if(done) {MSVCRT$free(output); output=NULL;}
+	char * msg = NULL;
+	BeaconOutput(CALLBACK_OUTPUT, output, currentoutsize);
+	currentoutsize = 0;
+	MSVCRT$memset(output, 0, bufsize);
+	if(done) {MSVCRT$free(output); output=NULL;}
 }
 //END TrustedSec BOF print code.
 
@@ -90,27 +90,27 @@ void printoutput(BOOL done) {
 void go(char *args, int len) {
 	CHAR *hostName = "";
 	HANDLE handleHost = NULL;
-    datap parser;
+	datap parser;
 	DWORD argSize = NULL;
 	WTS_PROCESS_INFOA * proc_info;
 	DWORD pi_count = 0;
 	LPSTR procName; 
 	DWORD procPID;
 	bool foundSecProduct = false;
-	
-    BeaconDataParse(&parser, args, len);
-    hostName = BeaconDataExtract(&parser, &argSize);
+
+	BeaconDataParse(&parser, args, len);
+	hostName = BeaconDataExtract(&parser, &argSize);
 	if(!bofstart()) return;
 
 	//allocate memory for list
-	size_t numSoftware = 130; //130
-    SoftwareData *softwareList = (SoftwareData *)KERNEL32$VirtualAlloc(NULL, numSoftware * sizeof(SoftwareData), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    if (softwareList == NULL) {
+	size_t numSoftware = 150;
+	SoftwareData *softwareList = (SoftwareData *)KERNEL32$VirtualAlloc(NULL, numSoftware * sizeof(SoftwareData), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	if (softwareList == NULL) {
 		BeaconPrintf(CALLBACK_ERROR, "Failed to allocate memory for softwareList.\n");
-        return -1;
-    }
+		return -1;
+	}
 
-    //Start security product list
+	//Start security product list
 	softwareList[0].filename = "avastsvc.exe";
 	softwareList[0].description = L"Avast";
 	softwareList[0].category = L"AV";
@@ -630,9 +630,89 @@ void go(char *args, int len) {
 	softwareList[129].filename = "zlclient.exe";
 	softwareList[129].description = L"ZoneAlarm Security Suite";
 	softwareList[129].category = L"AV";
+
+	softwareList[130].filename = "mssense.exe";
+	softwareList[130].description = L"Windows Defender for Endpoint";
+	softwareList[130].category = L"EDR";
+
+	softwareList[131].filename = "mdecontaintoolv2.exe";
+	softwareList[131].description = L"Windows Defender for Endpoint";
+	softwareList[131].category = L"EDR";
+
+	softwareList[132].filename = "nissrv.exe";
+	softwareList[132].description = L"Windows Defender for Endpoint";
+	softwareList[132].category = L"EDR";
+
+	softwareList[133].filename = "sensece.exe";
+	softwareList[133].description = L"Windows Defender for Endpoint";
+	softwareList[133].category = L"EDR";
+
+	softwareList[134].filename = "securityhealthservice.exe";
+	softwareList[134].description = L"Windows Defender for Endpoint";
+	softwareList[134].category = L"EDR";
+
+	softwareList[135].filename = "sensendr.exe";
+	softwareList[135].description = L"Windows Defender for Endpoint";
+	softwareList[135].category = L"EDR";
+
+	softwareList[136].filename = "cylancesvc.exe";
+	softwareList[136].description = L"Cylance";
+	softwareList[136].category = L"EDR";
+
+	softwareList[137].filename = "cyoptics.exe";
+	softwareList[137].description = L"Cylance";
+	softwareList[137].category = L"EDR";
+
+	softwareList[138].filename = "dsa.exe";
+	softwareList[138].description = L"Trend Micro";
+	softwareList[138].category = L"EDR";
+
+	softwareList[139].filename = "dsa-connect.exe";
+	softwareList[139].description = L"Trend Micro";
+	softwareList[139].category = L"EDR";
+
+	softwareList[140].filename = "coreframeworkhost.exe";
+	softwareList[140].description = L"Trend Micro";
+	softwareList[140].category = L"EDR";
+
+	softwareList[141].filename = "coreserviceshell.exe";
+	softwareList[141].description = L"Trend Micro";
+	softwareList[141].category = L"EDR";
+
+	softwareList[142].filename = "ds_monitor.exe";
+	softwareList[142].description = L"Trend Micro";
+	softwareList[142].category = L"EDR";
+
+	softwareList[143].filename = "notifier.exe";
+	softwareList[143].description = L"Trend Micro";
+	softwareList[143].category = L"EDR";
+
+	softwareList[144].filename = "SentinelServiceHost.exe";
+	softwareList[144].description = L"SentinelOne";
+	softwareList[144].category = L"EDR";
+
+	softwareList[145].filename = "sentinelstaticengine.exe";
+	softwareList[145].description = L"SentinelOne";
+	softwareList[145].category = L"EDR";
+
+	softwareList[146].filename = "sentinelstaticenginescanner.exe";
+	softwareList[146].description = L"SentinelOne";
+	softwareList[146].category = L"EDR";
+
+	softwareList[147].filename = "sentinelhelperservice.exe";
+	softwareList[147].description = L"SentinelOne";
+	softwareList[147].category = L"EDR";
+
+	softwareList[148].filename = "sentinelagent.exe";
+	softwareList[148].description = L"SentinelOne";
+	softwareList[148].category = L"EDR";
+
+	softwareList[149].filename = "sentinelmemoryscanner.exe";
+	softwareList[149].description = L"SentinelOne";
+	softwareList[149].category = L"EDR";
 	//End security product list
 
-	
+
 	//get handle to specified host
 	handleHost = WTSAPI32$WTSOpenServerA(hostName);
 
@@ -642,7 +722,7 @@ void go(char *args, int len) {
 		BeaconPrintf(CALLBACK_ERROR, "Failed to get a valid handle to the specified host.\n");
 		return -1;
 	}
-	
+
 	if(pi_count == 0) {
 		BeaconPrintf(CALLBACK_ERROR, "Couldn't list remote processes. Do you have enough privileges on the remote host?\n");
 		return -1;
@@ -654,31 +734,31 @@ void go(char *args, int len) {
 		// https://learn.microsoft.com/en-us/windows/win32/api/wtsapi32/ns-wtsapi32-wts_process_infoa
 		procName = proc_info[i].pProcessName;
 		procPID = proc_info[i].ProcessId;
-		
+
 		for (size_t i = 0; procName[i]; i++) {
-            procName[i] = MSVCRT$tolower(procName[i]); 
-        }
-		
+			procName[i] = MSVCRT$tolower(procName[i]); 
+		}
+
 		for (size_t i = 0; i < numSoftware; i++) {
 			if (MSVCRT$strcmp(procName, softwareList[i].filename) == 0) {
 				internal_printf("%ls\t%u\t%s\t\t%-50ls\n", softwareList[i].category, procPID, softwareList[i].filename, softwareList[i].description);
 				foundSecProduct = true;
-                break;
-            }
+				break;
+			}
 		}
 		procName = NULL;
 	}
-	
+
 	if (foundSecProduct) {
-        printoutput(TRUE);
-    } else {
-        BeaconPrintf(CALLBACK_ERROR, "No running security processes were found.\n");
-    }
-	
+		printoutput(TRUE);
+	} else {
+		BeaconPrintf(CALLBACK_ERROR, "No running security processes were found.\n");
+	}
+
 	WTSAPI32$WTSCloseServer(handleHost);
 	KERNEL32$VirtualFree(softwareList, 0, MEM_RELEASE);
 
-    return 0;
+	return 0;
 }
 
 
