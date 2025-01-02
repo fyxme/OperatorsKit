@@ -95,6 +95,7 @@ void go(char *args, int len) {
 	WTS_PROCESS_INFOA * proc_info;
 	DWORD pi_count = 0;
 	LPSTR procName; 
+	DWORD procPID;
 	bool foundSecProduct = false;
 	
     BeaconDataParse(&parser, args, len);
@@ -636,6 +637,7 @@ void go(char *args, int len) {
 	handleHost = WTSAPI32$WTSOpenServerA(hostName);
 
 	//get list of running processes 
+	// https://learn.microsoft.com/en-us/windows/win32/api/wtsapi32/nf-wtsapi32-wtsenumerateprocessesa
 	if (!WTSAPI32$WTSEnumerateProcessesA(handleHost, 0, 1, &proc_info, &pi_count)) {
 		BeaconPrintf(CALLBACK_ERROR, "Failed to get a valid handle to the specified host.\n");
 		return -1;
@@ -647,9 +649,11 @@ void go(char *args, int len) {
 	}
 
 	//compare list with running processes
-	internal_printf("Description\t\t\t\t\tCategory\n==============================================================\n");
+	internal_printf("Category\tPid\tFilename\t\tDescription\n==============================================================\n");
 	for (int i = 0 ; i < pi_count ; i++ ) {
+		// https://learn.microsoft.com/en-us/windows/win32/api/wtsapi32/ns-wtsapi32-wts_process_infoa
 		procName = proc_info[i].pProcessName;
+		procPID = proc_info[i].ProcessId;
 		
 		for (size_t i = 0; procName[i]; i++) {
             procName[i] = MSVCRT$tolower(procName[i]); 
@@ -657,7 +661,7 @@ void go(char *args, int len) {
 		
 		for (size_t i = 0; i < numSoftware; i++) {
 			if (MSVCRT$strcmp(procName, softwareList[i].filename) == 0) {
-				internal_printf("%-50ls\t%ls\n", softwareList[i].description, softwareList[i].category);
+				internal_printf("%ls\t%u\t%s\t\t%-50ls\n", softwareList[i].category, procPID, softwareList[i].filename, softwareList[i].description);
 				foundSecProduct = true;
                 break;
             }

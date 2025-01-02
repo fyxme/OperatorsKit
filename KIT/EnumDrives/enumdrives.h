@@ -5,6 +5,10 @@ WINBASEAPI UINT WINAPI KERNEL32$GetDriveTypeA(LPCSTR lpRootPathName);
 WINBASEAPI int __cdecl MSVCRT$printf(const char * _Format,...);
 WINBASEAPI size_t __cdecl MSVCRT$strlen(const char *str);
 
+//WINBASEAPI DWORD KERNEL32$QueryDosDeviceA(LPCSTR lpDeviceName, LPSTR lpTargetPath, DWORD ucchMax);
+WINBASEAPI void* WINAPI MSVCRT$strcpy(const char* dest, const char* source);
+WINBASEAPI DWORD WINAPI MPR$WNetGetConnectionA(LPCSTR tmpDrive, LPSTR networkPath, LPDWORD bufferSize);
+
 
 //bofstart + internal_printf + printoutput
 WINBASEAPI void *__cdecl MSVCRT$calloc(size_t number, size_t size);

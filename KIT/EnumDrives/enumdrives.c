@@ -1,8 +1,8 @@
 #include <windows.h>
 #include <stdio.h>
+
 #include "enumdrives.h"
 #include "beacon.h"
-
 
 //START TrustedSec BOF print code: https://github.com/trustedsec/CS-Situational-Awareness-BOF/blob/master/src/common/base.c
 #ifndef bufsize
@@ -75,8 +75,19 @@ void printoutput(BOOL done) {
 }
 //END TrustedSec BOF print code.
 
+int isbackslash(char c) {
+	return c == '\\';
+}
 
-void printDriveType(const char* drive) {
+char *rtrim(char *s)
+{
+    char* back = s + MSVCRT$strlen(s);
+    while(isbackslash(*--back));
+    *(back+1) = '\0';
+    return s;
+}
+
+void printDriveType(char* drive) {
     UINT driveType = KERNEL32$GetDriveTypeA(drive);
 	
     if (driveType == DRIVE_UNKNOWN) {
@@ -88,39 +99,53 @@ void printDriveType(const char* drive) {
     } else if (driveType == DRIVE_FIXED) {
         internal_printf("%s\t[Fixed drive]\n", drive);
     } else if (driveType == DRIVE_REMOTE) {
-        internal_printf("%s\t[Network drive]\n", drive);
+	    char networkPath[MAX_PATH] = {0};
+	    DWORD bufferSize = MAX_PATH;
+
+	    char tmpDrive[256] = {0};
+	    MSVCRT$strcpy(tmpDrive, drive);
+
+
+	    // need to trim the backslash at the end of the drive name for the function below
+	    rtrim(tmpDrive);
+
+	    // Get the network path associated with the drive
+	   DWORD result = MPR$WNetGetConnectionA(tmpDrive, networkPath, &bufferSize);
+	   // DWORD result = KERNEL32$QueryDosDeviceA(tmpDrive, networkPath, bufferSize);
+
+	    internal_printf("%s\t[Network drive]\t%s\n", drive, networkPath);
     } else if (driveType == DRIVE_CDROM) {
-        internal_printf("%s\t[CD-ROM drive]\n", drive);
+	    internal_printf("%s\t[CD-ROM drive]\n", drive);
     } else if (driveType == DRIVE_RAMDISK) {
-        internal_printf("%s\t[RAM disk]\n", drive);
+	    internal_printf("%s\t[RAM disk]\n", drive);
     } else {
-        internal_printf("%s\t[Unknown drive type]\n", drive);
+	    internal_printf("%s\t[Unknown drive type]\n", drive);
     }
 }
 
 int go() {
 	if(!bofstart()) return;
-	
-    // Buffer to store drive strings
-    char driveStrings[256];
-    DWORD length = KERNEL32$GetLogicalDriveStringsA(sizeof(driveStrings), driveStrings);
 
-    if (length == 0) {
-        BeaconPrintf(CALLBACK_ERROR, "[-] Failed to get logical drive strings.\n");
-        return 1;
-    }
+	// Buffer to store drive strings
+	char driveStrings[256];
+	DWORD length = KERNEL32$GetLogicalDriveStringsA(sizeof(driveStrings), driveStrings);
 
-    internal_printf("[+] Available drive letters:\n\nDRIVE\tTYPE\n==========================================\n");
+	if (length == 0) {
+		BeaconPrintf(CALLBACK_ERROR, "[-] Failed to get logical drive strings.\n");
+		return 1;
+	}
 
-    // Iterate through the drive strings
-    for (char* drive = driveStrings; *drive; drive +=  MSVCRT$strlen(drive) + 1) {
-        printDriveType(drive);
-    }
-	
+	internal_printf("[+] Available drive letters:\n\nDRIVE\tTYPE\n==========================================\n");
+
+	// Iterate through the drive strings
+	for (char* drive = driveStrings; *drive; drive +=  MSVCRT$strlen(drive) + 1) {
+		printDriveType(drive);
+	}
+
 	printoutput(TRUE);
 	BeaconPrintf(CALLBACK_OUTPUT, "[+] Finished enumerating!\n"); 
 
-    return 0;
+	return 0;
 }
 
 
