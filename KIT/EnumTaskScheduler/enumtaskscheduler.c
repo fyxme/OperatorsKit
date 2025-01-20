@@ -193,6 +193,13 @@ BOOL EnumScheduledTasks(wchar_t * host) {
 												internal_printf("- Executable path: %ls\n", execPath);
 												OLEAUT32$SysFreeString(execPath);
 											}
+
+											BSTR arguments;
+											hr = pExecAction->lpVtbl->get_Arguments(pExecAction, &arguments);
+											if (SUCCEEDED(hr)) {
+												internal_printf("- Command Arguments: %ls\n", arguments);
+												OLEAUT32$SysFreeString(arguments);
+											}
 										}
 									}
 
@@ -202,7 +209,7 @@ BOOL EnumScheduledTasks(wchar_t * host) {
 						}
 					}
 				}
-				
+
 				// Fetching Trigger Information
 				ITriggerCollection* pTriggerColl = NULL;
 				hr = pTaskDef->lpVtbl->get_Triggers(pTaskDef, &pTriggerColl);
@@ -235,8 +242,8 @@ BOOL EnumScheduledTasks(wchar_t * host) {
 									};
 
 									const WCHAR* triggerTypeName = (triggerType >= 0 && triggerType < sizeof(triggerTypeNames) / sizeof(triggerTypeNames[0])) 
-																  ? triggerTypeNames[triggerType] 
-																  : L"Unknown";
+										? triggerTypeNames[triggerType] 
+										: L"Unknown";
 
 									internal_printf("- Trigger type: %ls\n", triggerTypeName);
 								}
@@ -260,20 +267,20 @@ BOOL EnumScheduledTasks(wchar_t * host) {
 	}
 
 cleanup:
-    if (pTaskCollection) {
-        pTaskCollection->lpVtbl->Release(pTaskCollection);
-    }
-    if (pRootFolder) {
-        pRootFolder->lpVtbl->Release(pRootFolder);
+	if (pTaskCollection) {
+		pTaskCollection->lpVtbl->Release(pTaskCollection);
 	}
-    if (pTaskService) {
-        pTaskService->lpVtbl->Release(pTaskService);
-    }
+	if (pRootFolder) {
+		pRootFolder->lpVtbl->Release(pRootFolder);
+	}
+	if (pTaskService) {
+		pTaskService->lpVtbl->Release(pTaskService);
+	}
 
-    OLEAUT32$VariantClear(&Vhost);
-    OLE32$CoUninitialize();
+	OLEAUT32$VariantClear(&Vhost);
+	OLE32$CoUninitialize();
 
-    return TRUE;
+	return TRUE;
 }
 
 
@@ -282,7 +289,7 @@ int go(char *args, int len) {
 	BOOL res = NULL;
 	datap parser;
 	WCHAR *hostName  = L""; 
-	
+
 	BeaconDataParse(&parser, args, len);
 	hostName = BeaconDataExtract(&parser, NULL);
 	if(!bofstart()) return;
@@ -300,5 +307,5 @@ int go(char *args, int len) {
 }
 
 
-		
-		
+
+
